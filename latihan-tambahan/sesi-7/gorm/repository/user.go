@@ -48,7 +48,7 @@ func (r *userRepo) UpdateUserByID(id uint, request *models.User) error {
 }
 
 func (r *userRepo) DeleteUserByID(id uint) error {
-	var user models.User
+	var user *models.User
 	err := r.db.Where("id=?", id).Delete(&user).Error
 	return err
 }
