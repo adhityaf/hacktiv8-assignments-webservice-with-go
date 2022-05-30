@@ -18,7 +18,7 @@ func NewItemController(service *services.ItemService) *ItemController{
 	}
 }
 
-func (i *ItemController) CreateNewItem(c *gin.Context){
+func (i *ItemController) CreateItem(c *gin.Context){
 	var req params.CreateItem
 
 	err := c.ShouldBindJSON(&req)
@@ -31,6 +31,11 @@ func (i *ItemController) CreateNewItem(c *gin.Context){
 		return
 	}
 
-	response := i.itemService.CreateItem(req)
+	response := i.itemService.Create(req)
+	c.JSON(response.Status, response)
+}
+
+func (i *ItemController) GetItems(c *gin.Context){
+	response := i.itemService.GetItems()
 	c.JSON(response.Status, response)
 }

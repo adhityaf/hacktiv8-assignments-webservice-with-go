@@ -17,17 +17,22 @@ func main() {
 		return
 	}
 
-	router := gin.Default()
+	route := gin.Default()
 
 	itemRepo := repositories.NewItemRepo(db)
 	itemService := services.NewItemService(itemRepo)
 	itemController := controllers.NewItemController(itemService)
 
-	router.POST("/items", itemController.CreateNewItem)
+	orderRepo := repositories.NewOrderRepo(db)
+	orderService := services.NewOrderService(orderRepo)
+	orderController := controllers.NewOrderController(orderService)
 
-	// router.POST("/orders")
-	// router.GET("/orders")
-	// router.PUT("/orders/:orderId")
-	// router.DELETE("/orders/:orderId")
-	router.Run(database.APP_PORT)
+	route.POST("/items", itemController.CreateItem)
+	route.GET("/items", itemController.GetItems)
+
+	route.POST("/orders", orderController.CreateOrder)
+	route.GET("/orders", orderController.GetOrders)
+	route.PUT("/orders/:orderId", orderController.UpdateOrder)
+	route.DELETE("/orders/:orderId", orderController.DeleteOrder)
+	route.Run(database.APP_PORT)
 }
