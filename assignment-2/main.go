@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	db, err := database.ConnectDB()
+	// Initialize database
+	db, err := database.ConnectDB("mysql")
 	if err != nil {
 		fmt.Println("error :", err.Error())
 		return
@@ -20,19 +21,15 @@ func main() {
 	route := gin.Default()
 
 	itemRepo := repositories.NewItemRepo(db)
-	itemService := services.NewItemService(itemRepo)
-	itemController := controllers.NewItemController(itemService)
-
 	orderRepo := repositories.NewOrderRepo(db)
-	orderService := services.NewOrderService(orderRepo)
-	orderController := controllers.NewOrderController(orderService)
 
-	route.POST("/items", itemController.CreateItem)
-	route.GET("/items", itemController.GetItems)
+	orderService := services.NewOrderService(orderRepo, itemRepo)
+	orderController := controllers.NewOrderController(orderService)
 
 	route.POST("/orders", orderController.CreateOrder)
 	route.GET("/orders", orderController.GetOrders)
 	route.PUT("/orders/:orderId", orderController.UpdateOrder)
 	route.DELETE("/orders/:orderId", orderController.DeleteOrder)
+
 	route.Run(database.APP_PORT)
 }

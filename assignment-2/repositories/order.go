@@ -3,7 +3,7 @@ package repositories
 import (
 	"assignment-2/models"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type OrderRepo interface {

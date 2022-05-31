@@ -4,20 +4,21 @@ import (
 	"assignment-2/models"
 	"assignment-2/params"
 	"assignment-2/repositories"
-	"crypto/rand"
 	"fmt"
-	"io"
+	"math/rand"
 	"net/http"
 	"time"
 )
 
 type OrderService struct {
 	orderRepo repositories.OrderRepo
+	itemRepo  repositories.ItemRepo
 }
 
-func NewOrderService(repo repositories.OrderRepo) *OrderService {
+func NewOrderService(orderRepo repositories.OrderRepo, itemRepo repositories.ItemRepo) *OrderService {
 	return &OrderService{
-		orderRepo: repo,
+		orderRepo: orderRepo,
+		itemRepo:  itemRepo,
 	}
 }
 
@@ -31,13 +32,14 @@ func (o *OrderService) FindAll() *params.Response {
 		}
 	}
 
-	if len(*orders) == 0 {
+	if orders == nil {
 		return &params.Response{
-			Status:         http.StatusNoContent,
+			Status:         http.StatusNotFound,
 			Error:          "Data Not Exist",
 			AdditionalInfo: err.Error(),
 		}
 	}
+	
 	return &params.Response{
 		Status:  http.StatusOK,
 		Message: "Success retrieve all data",
@@ -60,16 +62,28 @@ func (o *OrderService) Create(request params.CreateOrder) *params.Response {
 		}
 	}
 
-	// orderId := order.ID
-	// for i := 0; i < 25; i++ {
-	// 	code := GenerateItemCode()
-	// 	ItemController.itemService.Create(models.Item{
-	// 		ItemCode:    code,
-	// 		Description: "Decription Item with code " + code,
-	// 		Quantity:    10,
-	// 		OrderID:     orderId,
-	// 	})
-	// }
+	orderId := order.ID
+	for i := 0; i < 25; i++ {
+		rand.Seed(time.Now().UnixNano())
+		code := rand.Intn(10-1) + 1
+		
+		if item, err := o.itemRepo.FindByCode(uint(code), orderId); err != nil {
+			// create new item if code and orderId not found
+			modelItem := models.Item{ItemCode: uint(code),
+				Description: fmt.Sprintf("Decription Item with code %d ", code),
+				Quantity:    1,
+				OrderID:     orderId,
+			}
+
+			o.itemRepo.Create(&modelItem)
+		} else {
+			// if item already exist
+			// increase quantity and update the data
+			item.Quantity += 1
+
+			o.itemRepo.Update(item)
+		}
+	}
 
 	return &params.Response{
 		Status:  201,
@@ -130,19 +144,4 @@ func (o *OrderService) Delete(id uint) *params.Response {
 		Message: fmt.Sprintf("Success Delete Data with id: %d", id),
 		Payload: order,
 	}
-}
-
-// Function to generate 6 Code for item_code field
-var table = []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
-
-func GenerateItemCode() string {
-	b := make([]byte, 2)
-	n, err := io.ReadAtLeast(rand.Reader, b, 2)
-	if n != 2 {
-		panic(err)
-	}
-	for i := 0; i < len(b); i++ {
-		b[i] = table[int(b[i])%len(table)]
-	}
-	return string(b)
 }
